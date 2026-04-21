@@ -19,7 +19,7 @@ public:
     static Player* create(const std::string& filename = "");
     virtual bool init() override;
 
-    // 【核心修改】update 增加平台数据参数，用于物理检测
+    // update 增加平台数据参数，用于物理检测
     void update(float dt, const std::vector<cocos2d::Rect>& platforms);
 
     // ==========================================
@@ -39,8 +39,19 @@ public:
     void stopJump();
     void pogoJump(); // 下劈命中后的弹起
 
+
+    // 检查是否可以跳跃 (按键是否已重置)
+    bool isJumpReady() const;
+
+    // 锁定跳跃 (在跳跃开始时调用)
+    void consumeJumpInput();
+
     // 攻击 (委托给 Animator)
     void attack();
+    // 重置攻击冷却 (在攻击开始时调用)
+    void startAttackCooldown();
+    // 检查是否可以攻击 (冷却是否结束)
+    bool isAttackReady() const;
 
     // 动画通用接口
     void playAnimation(const std::string& animName);
@@ -53,11 +64,10 @@ public:
     // ==========================================
     // 3. 战斗与数值接口 (Combat & Stats)
     // ==========================================
-    // 【核心修改】受击逻辑 (带防穿墙检测)
+    // 受击逻辑 (带防穿墙检测)
     void takeDamage(int damage, const cocos2d::Vec2& attackerPos, const std::vector<cocos2d::Rect>& platforms);
     void executeHeal(); // 执行回血
     bool canFocus() const; // 是否满足凝聚条件
-
 
     // 魂量操作 (转发给 Stats)
     void gainSoul(int amount);
@@ -66,8 +76,20 @@ public:
     // 数据获取 (直接从 Stats 组件读取)
     int getHealth() const { return _stats ? _stats->getHealth() : 0; }
     int getMaxHealth() const { return _stats ? _stats->getMaxHealth() : 0; }
-    float getVelocityX();
+	int getSoul()const { return _stats ? _stats->getSoul() : 0; }
     PlayerStats* getStats() const { return _stats; }
+
+    float getVelocityX();
+    // 消耗灵魂
+    bool consumeSoul(int amount);
+
+    bool canCastSpell();          // 检查蓝量、是否解锁
+    void executeSpell();          // 真正生成火球的函数 (扣蓝、生成对象)
+   
+    void unlockFireball() { _hasFireballSkill = true; }
+    bool hasFireballSkill() const { return _hasFireballSkill; }
+
+    bool Player::isCastReady() const;
 
     // ==========================================
     // 4. 输入设置 (Input Setters)
@@ -88,7 +110,21 @@ public:
 
     void setFocusInput(bool pressed);
     bool isFocusInputPressed() const { return _isFocusInputPressed; }
+    
+    // 设置施法按键状态
+    void setCastInput(bool pressed);
+    bool isCastPressed() const { return _isCastPressed; }
 
+    // 施法防连发锁（和跳跃锁一样，松开才能再次施法）
+    void consumeCastInput();
+
+    void setDreamNailInput(bool pressed);
+    bool isDreamNailPressed() const { return _isDreamNailPressed; }
+
+    bool isDreamNailActive() const { return _isDreamNailActive; }
+    void setDreamNailActive(bool active) { _isDreamNailActive = active; }
+
+    cocos2d::Rect getDreamNailHitbox() const;
     // ==========================================
     // 5. 辅助与调试 (Helpers & Debug)
     // ==========================================
@@ -98,6 +134,7 @@ public:
     bool isOnGround() const { return _isOnGround; }
     float getVelocityY() const { return _velocity.y; }
     bool isInvincible() const { return _isInvincible; }
+    bool isFacingRight() const { return _isFacingRight; }
 
     void drawDebugRects();
 
@@ -107,8 +144,7 @@ public:
     void setOnHealthChanged(const std::function<void(int, int)>& callback);
     void setOnSoulChanged(const std::function<void(int)>& callback);
 
-public:
-    bool isFacingRight() const { return _isFacingRight; }
+    void recordSafePositionIfOnGround();
 
 private:
     // --- 内部物理逻辑 ---
@@ -117,7 +153,6 @@ private:
     void updateCollisionX(const std::vector<cocos2d::Rect>& platforms);
     void updateCollisionY(const std::vector<cocos2d::Rect>& platforms);
 
-private:
     // ==========================================
     // 成员变量
     // ==========================================
@@ -136,6 +171,8 @@ private:
 
     bool _isOnGround;
     bool _isFacingRight;
+    // 攻击冷却倒计时
+    float _attackCooldownTimer;
 
     // --- 逻辑标记 ---
     bool _isInvincible;
@@ -149,6 +186,15 @@ private:
     bool _isJumpPressed;
     bool _isFocusInputPressed;
     int _currentAttackDir;
+
+    bool _jumpInputReleased;//跳跃锁：true表示键已松开，可以再次跳跃
+    bool _hasFireballSkill = false; // 技能持有
+
+    bool _isCastPressed;
+    bool _castInputReleased; // 用于防连发
+
+    bool _isDreamNailPressed = false;
+    bool _isDreamNailActive = false;
 
     // --- 调试 ---
     cocos2d::DrawNode* _debugNode = nullptr;

@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include "HitEffect.h"
 USING_NS_CC;
 
 Enemy* Enemy::create(const std::string& filename)
@@ -157,54 +158,41 @@ void Enemy::update(float dt)
 // ======================================================================
 void Enemy::takeDamage(int damage, const cocos2d::Vec2& attackerPos)
 {
-    // 【修复】如果已经死亡 或 处于无敌状态，直接返回
     if (_currentState == State::DEAD || _isInvincible) return;
 
     _health -= damage;
     CCLOG(" Enemy took % d damage!Health: % d / % d", damage, _health, _maxHealth);
-    // 开启无敌
     _isInvincible = true;
     // ========================================
-    // 1. 受击闪烁效果（变红 + 闪烁）
-    // ========================================
-    auto tintRed = TintTo::create(0.1f, 255, 0, 0);      // 变红
-    auto tintNormal = TintTo::create(0.1f, 255, 255, 255); // 恢复正常
+    // 1. 受击特效动画（位置略微偏下）
+    float fxSize = std::max(this->getContentSize().width, this->getContentSize().height) * 0.8f;
+    HitEffect::play(this->getParent(), this->getPosition() + Vec2(0, this->getContentSize().height * 0.15f), fxSize);
+    // 2. 原有受击闪烁
+    auto tintRed = TintTo::create(0.1f, 255, 0, 0);
+    auto tintNormal = TintTo::create(0.1f, 255, 255, 255);
     auto blink = Sequence::create(tintRed, tintNormal, nullptr);
-    auto repeat = Repeat::create(blink, 2); // 闪烁2次
+    auto repeat = Repeat::create(blink, 2);
     this->runAction(repeat);
-
     // ========================================
-    // 2. 击退效果（向后推）
-    // ========================================
-    float knockbackDistance = 30.0f; // 击退距离
-    float knockbackDuration = 0.2f;  // 击退持续时间
-
-    // 根据敌人当前朝向决定击退方向
-    float direction = _movingRight ? -1.0f : 1.0f; // 向左击退或向右击退
-    
+    // 3. 击退
+    float knockbackDistance = 30.0f;
+    float knockbackDuration = 0.2f;
+    float direction = _movingRight ? -1.0f : 1.0f;
     Vec2 currentPos = this->getPosition();
     Vec2 knockbackTarget = Vec2(currentPos.x + direction * knockbackDistance, currentPos.y);
-    
     auto knockback = MoveTo::create(knockbackDuration, knockbackTarget);
-    auto easeOut = EaseOut::create(knockback, 2.0f); // 缓动效果
+    auto easeOut = EaseOut::create(knockback, 2.0f);
     this->runAction(easeOut);
-
-	// 设置无敌持续时间
     this->scheduleOnce([this](float dt) {
         _isInvincible = false;
         }, 0.2f, "invincible_cooldown");
-
     if (_health <= 0)
     {
         CCLOG("Enemy defeated!");
         changeState(State::DEAD);
-
-        // ====================================================
-        // 【核心修改】不管是谁，执行它交代的后事
-        // ====================================================
         if (_onDeathCallback)
         {
-            _onDeathCallback(); // 执行回调！
+            _onDeathCallback();
         }
     }
 }

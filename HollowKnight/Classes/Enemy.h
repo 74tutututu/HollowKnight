@@ -2,10 +2,11 @@
 #define __ENEMY_H__
 #include <functional> 
 #include "cocos2d.h"
+#include "GameEntity.h" // 引入基类
 
 USING_NS_CC;
 
-class Enemy : public cocos2d::Sprite
+class Enemy : public GameEntity
 {
 public:
     // 敌人状态枚举
@@ -23,25 +24,21 @@ public:
     // 每帧更新
     void update(float dt) override;
 
-    // 受击处理（接收攻击者位置以计算正确的击退方向）
-    void takeDamage(int damage, const cocos2d::Vec2& attackerPos);
-
     // 设置巡逻范围
     void setPatrolRange(float leftBound, float rightBound);
 
     // 获取碰撞箱（用于攻击判定）
-    cocos2d::Rect getHitbox() const;
+    virtual cocos2d::Rect getHitbox() const override;
 
     // 碰到主角时的击退反应
+    virtual void takeDamage(int damage, const cocos2d::Vec2& sourcePos) override;
+
     void onCollideWithPlayer(const cocos2d::Vec2& playerPos);
 
-    // 新增重载，支持主角面朝方向
-    void onCollideWithPlayer(const cocos2d::Vec2& playerPos, int playerFacing);
-
-    // 【新增】定义回调类型：这是一个“没有参数，也没有返回值”的函数类型
+    // 定义回调类型：这是一个“没有参数，也没有返回值”的函数类型
     typedef std::function<void()> DeathCallback;
 
-    // 【新增】设置回调的函数
+    // 设置回调的函数
     void setOnDeathCallback(DeathCallback callback) { _onDeathCallback = callback; }
 
     // 析构函数
@@ -78,4 +75,4 @@ private:
     cocos2d::Animation* _deathAnimation;
 };
 
-#endif // __ENEMY_H__
+#endif // __ENEMY_H__#pragma once

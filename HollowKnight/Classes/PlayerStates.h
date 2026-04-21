@@ -132,7 +132,7 @@ private:
 };
 
 // ==========================================
-// 【新增】死亡状态
+// 死亡状态
 // ==========================================
 class StateDead : public PlayerState
 {
@@ -142,3 +142,28 @@ public:
     virtual void exit(Player* player) override;
 };
 #endif // __PLAYER_STATES_H__
+
+class StateCast : public PlayerState
+{
+public:
+    virtual void enter(Player* player);
+    virtual void update(Player* player, float dt) override;
+    virtual void exit(Player* player) override;
+
+private:
+    float _timer;
+    bool _hasSpawned; // 标记是否已经生成了火球
+};
+
+// 梦之钉状态
+class StateDreamNail : public PlayerState
+{
+public:
+    void enter(Player* player) override;
+    void update(Player* player, float dt) override;
+    void exit(Player* player) override;
+
+private:
+    float _timer;
+    bool _hasSlashed;
+};

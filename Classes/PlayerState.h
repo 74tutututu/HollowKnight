@@ -2,7 +2,7 @@
 // 这是一个纯虚基类，不要在这里 include Player.h
 // 而是使用前向声明 (Forward Declaration)
 
-class Player; // 关键：告诉编译器 Player 是个类，但先别问细节
+class Player; 
 
 class PlayerState {
 public:

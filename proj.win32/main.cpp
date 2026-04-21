@@ -26,6 +26,10 @@
 #include "AppDelegate.h"
 #include "cocos2d.h"
 
+ // 【新增 1】引入 Windows 输入法头文件
+#include <imm.h>
+#pragma comment(lib, "imm32.lib")
+
 USING_NS_CC;
 
 int WINAPI _tWinMain(HINSTANCE hInstance,

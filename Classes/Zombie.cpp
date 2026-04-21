@@ -1,4 +1,5 @@
 #include "Zombie.h"
+#include "HitEffect.h"
 
 USING_NS_CC;
 
@@ -278,10 +279,14 @@ void Zombie::takeDamage(int damage, const cocos2d::Vec2& attackerPos)
     _isInvincible = true;
     CCLOG("Zombie Hit! HP: %d", _health);
 
-    // 1. 死亡判定
+    // ====== 新增：受击特效动画（位置略微偏下） ======
+    float fxSize = std::max(this->getContentSize().width, this->getContentSize().height) * 0.8f;
+    HitEffect::play(this->getParent(), this->getPosition() + Vec2(0, this->getContentSize().height * 0.15f), fxSize);
+    // ===============================
+
+    // 1. 死亡判断
     if (_health <= 0) {
         changeState(State::DEAD);
-        // 【核心】触发回调（加魂、统计等）
         if (_onDeathCallback) _onDeathCallback();
         return;
     }
@@ -289,13 +294,12 @@ void Zombie::takeDamage(int damage, const cocos2d::Vec2& attackerPos)
     State lastState = _currentState;
     changeState(State::DAMAGED);
 
-    // 2. 物理击退 (Velocity Impulse)
-    // 使用速度而非 MoveTo，这样会被物理系统处理，不会穿墙
+    // 2. 受击击退
     float dir = (getPositionX() - attackerPos.x) > 0 ? 1.0f : -1.0f;
-    _velocity.x = dir * 300.0f; // 水平击退速度
-    _velocity.y = 200.0f;       // 小跳一下
+    _velocity.x = dir * 300.0f;
+    _velocity.y = 200.0f;
 
-    // 3. 闪烁反馈
+    // 3. 闪烁动画
     this->stopActionByTag(888);
     auto blink = Sequence::create(
         Repeat::create(Sequence::create(TintTo::create(0.1f, 255, 0, 0), TintTo::create(0.1f, 255, 255, 255), nullptr), 2),
@@ -308,8 +312,7 @@ void Zombie::takeDamage(int damage, const cocos2d::Vec2& attackerPos)
     // 4. 恢复状态
     this->scheduleOnce([this, lastState](float) {
         if (_currentState == State::DAMAGED) {
-            _velocity.x = 0; // 停下
-            // 如果之前在攻击，恢复巡逻比较安全
+            _velocity.x = 0;
             changeState(State::PATROL);
         }
         }, 0.3f, "recover_state");

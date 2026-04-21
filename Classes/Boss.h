@@ -17,8 +17,8 @@ public:
         Pre_Attack,    // 攻击前摇
         Jump_Attack,   // 跳跃攻击
         Shockwave_Attack, // 发波攻击
-        Stunned,       // 瘫痪（包括播放动画和静止）
-        Recovering,     // 起身恢复（本项目中作为“从瘫痪恢复”的流程入口）
+        Stunned,       // 瘫痪
+        Recovering,     // 起身恢复
         Rampage_Jump,   // 狂暴突进跳
         Rampage_Attack  // 狂暴攻击
     };

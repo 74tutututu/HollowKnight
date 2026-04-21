@@ -5,7 +5,7 @@
 #include "SimpleAudioEngine.h" // 音频引擎
 
 USING_NS_CC;
-using namespace CocosDenshion; // 使用音频命名空间
+using namespace CocosDenshion; // 音频命名空间
 
 // 全局变量：用于记录凝聚(Focus)和跑步的循环音效ID，方便停止
 static unsigned int g_focusSoundID = 0;
@@ -483,7 +483,7 @@ void StateFocus::update(Player* player, float dt)
     auto triggerEnd = [this, player, TIME_END]() {
         this->_isEnding = true;
 
-        // 【新增】被打断时，停止蓄力音效
+        // 被打断时，停止蓄力音效
         if (g_focusSoundID != 0) {
             SimpleAudioEngine::getInstance()->stopEffect(g_focusSoundID);
             g_focusSoundID = 0;
@@ -645,64 +645,34 @@ void StateDead::exit(Player* player)
 // ============================================================
 void StateCast::enter(Player* player)
 {
-    // 1. 施法硬直：完全悬停
+    // 1. 施法初始只清零一次速度
     player->setVelocityX(0);
     player->setVelocityY(0);
-
-    // 2. 【阶段一】播放前摇动画 (3帧)
     player->playAnimation("cast_antic");
-
-    // 3. 初始化
     _timer = 0.0f;
-    _hasSpawned = false; // 还没发射
+    _hasSpawned = false;
 }
 
 void StateCast::update(Player* player, float dt)
 {
     _timer += dt;
 
-    // 施法全程保持滞空
-    player->setVelocityY(0);
-
-    // ==========================================================
-    // 时间参数配置
-    // ==========================================================
-    // 1. 前摇时间 (Antic Duration)
     const float TIME_ANTIC = 3 * 0.05f;
-    // 2. 后摇时间 (Release Duration)
     const float TIME_RELEASE = 6 * 0.06f;
-    // 总时长
     const float TIME_TOTAL = TIME_ANTIC + TIME_RELEASE;
 
-    // ==========================================================
-    // 状态切换逻辑
-    // ==========================================================
-
-    // 【阶段转换点】前摇结束，准备发射
     if (!_hasSpawned && _timer >= TIME_ANTIC)
     {
-        // 1. 真正发射火球 (扣蓝、生成对象)
         player->executeSpell();
-
-        // 2. 播放发射音效 (配合发射动作)
         SimpleAudioEngine::getInstance()->playEffect(Config::Audio::HERO_CAST);
-
-        // 3. 【关键】切换到后摇动画
         player->playAnimation("cast_release");
-
-        // 4. 给一个反冲力 (向后的瞬间速度)
-        // 注意：因为我们在上面每帧都由 setVelocityX(0)，这个反冲力只会在这一帧生效
-        // 如果想要持续滑行，需要加一个专门的变量控制，但在空中悬停时，瞬间位移效果更好
         float recoilDir = player->isFacingRight() ? -1.0f : 1.0f;
-        player->setPositionX(player->getPositionX() + recoilDir * 10.0f); // 直接修改一点位置模拟后坐力震动
-
-        // 标记已发射
+        player->setPositionX(player->getPositionX() + recoilDir * 10.0f);
+        // --- 修复：施法后立即刷新地面判定和安全坐标 ---
+        player->recordSafePositionIfOnGround();
         _hasSpawned = true;
     }
 
-    // ==========================================================
-    // 退出条件
-    // ==========================================================
     if (_timer >= TIME_TOTAL)
     {
         if (player->isOnGround()) {

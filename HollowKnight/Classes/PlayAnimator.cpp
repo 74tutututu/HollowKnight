@@ -1,7 +1,9 @@
 #include "PlayerAnimator.h"
+#include "SimpleAudioEngine.h"
 #include "Config.h" // 需要读取路径配置
 
 USING_NS_CC;
+using namespace CocosDenshion;
 
 PlayerAnimator::PlayerAnimator() : _owner(nullptr), _slashEffectSprite(nullptr), _focusEffectSprite(nullptr)
 {
@@ -17,6 +19,7 @@ void PlayerAnimator::init(Sprite* owner)
 
     // 1. 加载所有动画资源
     loadAllAnimations();
+
 
     // 2. 初始化刀光特效
     _slashEffectSprite = Sprite::create();
@@ -47,7 +50,6 @@ void PlayerAnimator::loadAnim(const std::string& name, const std::string& format
 
 void PlayerAnimator::loadAllAnimations()
 {
-    // === 搬运原来的加载逻辑 ===
     loadAnim("idle", Config::Path::PLAYER_IDLE, 9, 0.15f);
     loadAnim("run", Config::Path::PLAYER_RUN, 13, 0.15f);
     loadAnim("jump", Config::Path::PLAYER_JUMP, 6, 0.15f);
@@ -73,8 +75,45 @@ void PlayerAnimator::loadAllAnimations()
     // 凝聚特效
     loadAnim("effect_focus_loop", Config::Path::EFFECT_FOCUS_LOOP, 13, 0.06f);
     loadAnim("effect_focus_end", Config::Path::EFFECT_FOCUS_END, 2, 0.08f);
+
+    //施法两段动画
+    loadAnim("cast_antic", Config::Path::PLAYER_CAST_ANTIC, 3, 0.05f);
+    loadAnim("cast_release", Config::Path::PLAYER_CAST_RELEASE, 6, 0.06f);
+
+	// 梦之钉      
+    loadAnim("dream_nail_charge", Config::Path::DREAM_NAIL_CHARGE, 7, 0.1f);
+    loadAnim("dream_nail_slash", Config::Path::DREAM_NAIL_SLASH, 15, 0.04f);
 }
 
+void PlayerAnimator::preloadSounds()
+{
+    auto audio = SimpleAudioEngine::getInstance();
+
+    // 1. 背景音乐
+    audio->preloadBackgroundMusic(Config::Audio::BGM_DIRTMOUTH);
+
+    // 2. 动作音效
+    audio->preloadEffect(Config::Audio::HERO_JUMP);
+    audio->preloadEffect(Config::Audio::HERO_LAND_SOFT);
+    audio->preloadEffect(Config::Audio::HERO_LAND_HARD);
+    audio->preloadEffect(Config::Audio::HERO_RUN);
+    audio->preloadEffect(Config::Audio::HERO_UNSHEATH);
+
+    // 3. 战斗音效
+    audio->preloadEffect(Config::Audio::HERO_DAMAGE);
+    audio->preloadEffect(Config::Audio::HERO_DEATH);
+
+    // 4. 攻击音效
+    audio->preloadEffect(Config::Audio::SWORD_1);
+    audio->preloadEffect(Config::Audio::SWORD_2);
+    audio->preloadEffect(Config::Audio::SWORD_3);
+
+    // 5. 技能音效
+    audio->preloadEffect(Config::Audio::FOCUS_CHARGE);
+    audio->preloadEffect(Config::Audio::FOCUS_HEAL);
+
+    CCLOG("[PlayerAnimator] Audio Assets Preloaded Successfully from Config!");
+}
 void PlayerAnimator::playAnimation(const std::string& animName)
 {
     if (!_owner) return;
@@ -93,7 +132,7 @@ void PlayerAnimator::playAnimation(const std::string& animName)
     // 判断是循环播放还是单次播放
     if (animName == "idle" || animName == "run" || 
         animName == "focus_loop"||animName=="jump"||
-        animName=="fall")
+        animName=="fall" || animName == "dream_nail_charge")
     {
         action = RepeatForever::create(Animate::create(anim));
     }
@@ -132,8 +171,7 @@ void PlayerAnimator::playAttackEffect(int dir, bool facingRight)
         offset = Vec2(50, -70);
     }
     else { // Horizontal
-        // 保持左右偏移一致，均为50像素
-        offset = Vec2(facingRight ? 50 : -0, 0);
+        offset = Vec2(facingRight ? 20 : 40, 0);
     }
 
     _slashEffectSprite->setPosition(center + offset);

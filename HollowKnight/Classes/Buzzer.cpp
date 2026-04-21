@@ -9,10 +9,10 @@ Buzzer* Buzzer::create(const std::string& filename)
     if (buzzer && buzzer->initWithFile(filename) && buzzer->init())
     {
         buzzer->autorelease();
-        CCLOG("? [Buzzer::create] Succeeded with file: %s", filename.c_str());
+        CCLOG("[Buzzer::create] Succeeded with file: %s", filename.c_str());
         return buzzer;
     }
-    CCLOG("? [Buzzer::create] FAILED with file: %s", filename.c_str());
+    CCLOG("[Buzzer::create] FAILED with file : % s", filename.c_str());
     CC_SAFE_DELETE(buzzer);
     return nullptr;
 }
@@ -37,7 +37,10 @@ bool Buzzer::init()
     loadAnimations();
     playIdleAnimation();
 
-    CCLOG("? [Buzzer::init] Buzzer initialized successfully!");
+    // 设置梦之钉心声 (这是 GameEntity 提供的功能)
+    this->setDreamThought("...Kill...Crush...");
+
+    CCLOG(" [Buzzer::init] Buzzer initialized successfully!");
 
     return true;
 }
@@ -297,10 +300,12 @@ void Buzzer::takeDamage(int damage, const cocos2d::Vec2& attackerPos)
     _isInvincible = true;
     _health -= damage;
     CCLOG("?? Buzzer took %d damage! Health: %d/%d", damage, _health, _maxHealth);
-    // ====== 新增：受击打击感特效 ======
-    float fxSize = std::max(this->getContentSize().width, this->getContentSize().height) * 1.1f;
+
+    // ====== 新增：受击特效动画 ======
+    float fxSize = std::max(this->getContentSize().width, this->getContentSize().height) * 0.8f;
     HitEffect::play(this->getParent(), this->getPosition() + Vec2(0, this->getContentSize().height * 0.5f), fxSize);
     // ===============================
+
     {
         changeState(State::DEAD);
 

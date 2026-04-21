@@ -57,8 +57,8 @@ void Spike::update(float dt, const cocos2d::Vec2& playerPos, const std::vector<c
     {
         debugTimer = 0;
         Vec2 spikePos = this->getPosition();
-        CCLOG("[Spike Debug] Position: (%.1f, %.1f), State: %d, Visible: %d, PlayerPos: (%.1f, %.1f)", 
-              spikePos.x, spikePos.y, (int)_currentState, this->isVisible(), playerPos.x, playerPos.y);
+    //  CCLOG("[Spike Debug] Position: (%.1f, %.1f), State: %d, Visible: %d, PlayerPos: (%.1f, %.1f)", 
+       //       spikePos.x, spikePos.y, (int)_currentState, this->isVisible(), playerPos.x, playerPos.y);
     }
 
     // 根据状态执行不同行为

@@ -115,6 +115,7 @@ namespace Config {
         // ±³¾°ÒôÀÖ
         static const char* BGM_DIRTMOUTH = "audio/Royal_HollowKnight_Theme.mp3"; 
         static const char* BGM_BOSS = "audio/BossBattle.mp3";
+
         // Ö÷½Ç¶¯×÷
         static const char* HERO_JUMP = "audio/hero_jump.mp3";
         static const char* HERO_LAND_SOFT = "audio/hero_land_soft.mp3";

@@ -104,10 +104,17 @@ bool Boss::init(const Vec2& spawnPos)
         this->addChild(_sprite);
     }
 
+    else {
+        // 【关键】如果图片没找到，打印错误并停止初始化！
+        // 这能防止后续逻辑操作空数据导致的崩溃
+        CCLOG("ERROR: Failed to load Boss sprite 'boss/fall/1.png'! Crash avoided.");
+        return false;
+    }
+
     // 【调试】增加绘图节点，用于显示碰撞体积
-    auto drawNode = DrawNode::create();
-    drawNode->setTag(TAG_DEBUG_DRAW);
-    this->addChild(drawNode, 999); // 放在最上层
+    // auto drawNode = DrawNode::create();
+    // drawNode->setTag(TAG_DEBUG_DRAW);
+    // this->addChild(drawNode, 999); // 放在最上层
 
     switchState(State::Falling_Enter);
 
@@ -200,27 +207,26 @@ void Boss::updateBoss(float dt, const Vec2& playerPos, const std::vector<Rect>& 
 
     this->setPosition(nextPos);
 
-    // 【调试】绘制碰撞体积
-    auto drawNode = static_cast<DrawNode*>(this->getChildByTag(TAG_DEBUG_DRAW));
-    if (drawNode) {
-        drawNode->clear();
-
-        // 1. 绘制身体碰撞框 (红色)
-        Rect worldBody = getBodyHitbox();
-        Vec2 offset = this->getPosition();
-        Rect localBody(worldBody.origin.x - offset.x, worldBody.origin.y - offset.y, worldBody.size.width, worldBody.size.height);
-
-        drawNode->drawSolidRect(localBody.origin, localBody.origin + localBody.size, Color4F(1, 0, 0, 0.3f));
-        drawNode->drawRect(localBody.origin, localBody.origin + localBody.size, Color4F::RED);
-
-        // 2. 绘制锤子攻击框 (黄色，仅当激活时)
-        Rect worldHammer = getHammerHitbox();
-        if (!worldHammer.equals(Rect::ZERO)) {
-            Rect localHammer(worldHammer.origin.x - offset.x, worldHammer.origin.y - offset.y, worldHammer.size.width, worldHammer.size.height);
-            drawNode->drawSolidRect(localHammer.origin, localHammer.origin + localHammer.size, Color4F(1, 1, 0, 0.3f));
-            drawNode->drawRect(localHammer.origin, localHammer.origin + localHammer.size, Color4F::YELLOW);
-        }
-    }
+    // 可视化辅助线已移除
+    // auto drawNode = static_cast<DrawNode*>(this->getChildByTag(TAG_DEBUG_DRAW));
+    // if (drawNode) {
+    //     drawNode->clear();
+    //
+    //     // 1. Boss身体碰撞体
+    //     Rect worldBody = getBodyHitbox();
+    //     Vec2 offset = this->getPosition();
+    //     Rect localBody(worldBody.origin.x - offset.x, worldBody.origin.y - offset.y, worldBody.size.width, worldBody.size.height);
+    //     drawNode->drawSolidRect(localBody.origin, localBody.origin + localBody.size, Color4F(1, 0, 0, 0.3f));
+    //     drawNode->drawRect(localBody.origin, localBody.origin + localBody.size, Color4F::RED);
+    //
+    //     // 2. 锤子碰撞体
+    //     Rect worldHammer = getHammerHitbox();
+    //     if (!worldHammer.equals(Rect::ZERO)) {
+    //         Rect localHammer(worldHammer.origin.x - offset.x, worldHammer.origin.y - offset.y, worldHammer.size.width, worldHammer.size.height);
+    //         drawNode->drawSolidRect(localHammer.origin, localHammer.origin + localHammer.size, Color4F(1, 1, 0, 0.3f));
+    //         drawNode->drawRect(localHammer.origin, localHammer.origin + localHammer.size, Color4F::YELLOW);
+    //     }
+    // }
 }
 
 void Boss::performNextAction()
@@ -620,10 +626,14 @@ void Boss::takeDamage(int damage)
     _hurtTimer = HURT_COOLDOWN;
     flashEffect();
 
-    // ====== 新增：受击打击感特效 ======
+    // ====== 新增：受击打击感特效（缩小并右下偏移，偏移减小） ======
     if (_sprite) {
-        float fxSize = std::max(_sprite->getContentSize().width, _sprite->getContentSize().height) * BOSS_SCALE * 0.7f; // 缩小特效
-        HitEffect::play(this->getParent(), this->getPosition() + Vec2(0, _sprite->getContentSize().height * BOSS_SCALE * 0.5f), fxSize);
+        float fxSize = std::max(_sprite->getContentSize().width, _sprite->getContentSize().height) * BOSS_SCALE * 0.55f; // 稍大一点
+        // 调整到Boss中部偏下且稍微偏右
+        float yOffset = _sprite->getContentSize().height * BOSS_SCALE * 0.28f; // 0.28为中部偏下
+        float xOffset = _sprite->getContentSize().width * BOSS_SCALE * 0.05f;  // 0.10为稍微偏右
+        Vec2 offset = Vec2(xOffset, yOffset);
+        HitEffect::play(this->getParent(), this->getPosition() + offset, fxSize);
     }
     // ===============================
 
@@ -680,9 +690,9 @@ Rect Boss::getBodyHitbox() const
 
     float dir = _facing;
 
-    float widthRatio = 0.30f;
+    float widthRatio = 0.440f;
     if (_state == State::Jump_Attack && this->getName() != "Recovery") {
-        widthRatio = 0.30f;
+        widthRatio = 0.44f;
     }
 
     float forwardOffset = getForwardOffset();

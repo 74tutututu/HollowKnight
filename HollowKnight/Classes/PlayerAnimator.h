@@ -15,6 +15,7 @@ public:
 
     // 初始化：传入 owner (主角)，以便把特效精灵加到主角身上
     void init(cocos2d::Sprite* owner);
+    static void preloadSounds();
 
     // --- 核心接口 ---
     // 播放主角本体动画
@@ -33,6 +34,7 @@ private:
     // 内部加载函数
     void loadAllAnimations();
     void loadAnim(const std::string& name, const std::string& format, int count, float delay);
+
 
 private:
     // 持有主角的引用 (用于 runAction)

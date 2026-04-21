@@ -36,6 +36,12 @@ namespace Config {
         const int FRAMES_FULL = 5;
     }
 
+        namespace Skill {
+            const int FIREBALL_COST = 1;     // 消耗 1 点魂 (1/3 或 1/4 瓶)
+            const float FIREBALL_SPEED = 600.0f; // 飞行速度
+            const int FIREBALL_DAMAGE = 2;   // 伤害 (通常比平砍高)
+        }
+
     namespace Health {
         // 血条路径
         const std::string PATH_FULL = "HUDanim/health/full/full.png";
@@ -63,6 +69,10 @@ namespace Config {
 
         // 战斗参数
         const float ATTACK_COOLDOWN = 0.04f;
+
+        // 梦之钉配置
+        const float DREAM_NAIL_CHARGE_TIME = 0.3f; // 蓄力需要多久 (秒)
+        const float DREAM_NAIL_RANGE = 200.0f;     // 攻击距离 (比普通攻击远)
     }
 
     namespace Path {
@@ -84,8 +94,46 @@ namespace Config {
         static const char* PLAYER_FOCUS_GET = "knight/focusGet/focusGet_%d.png";
         static const char* PLAYER_FOCUS_END = "knight/focusEnd/focusEnd_%d.png";
         static const char* PLAYER_DAMAGED = "knight/recoil/recoil_%d.png";
+        static const char* PLAYER_CAST_ANTIC = "knight/fireballAntic/fireballAntic_%d.png";
+        static const char* PLAYER_CAST_RELEASE = "knight/fireballCast/fireballCast_%d.png";        static const char* PLAYER_ANTIC = "knight/fireballAntic/fireballAntic_%d.png";
         static const char* EFFECT_FOCUS_LOOP = "knight/focusGet/focusEffect/focusEffect_%d.png";
         static const char* EFFECT_FOCUS_END = "knight/focusEnd/focusEffectEnd/focusEffectEnd_%d.png";
+        static const char* DREAM_NAIL_CHARGE = "Knight/DNcharge/DNcharge_%d.png";
+        static const char* DREAM_NAIL_SLASH = "Knight/DNslash/DNslash_%d.png";
+
+        // 火球飞行特效
+        static const std::string FIREBALL_IDLE = "fireball/idle/fireball_%d.png";
+        static const std::string FIREBALL_FLY = "fireball/fly/fly_%d.png";
+   
+		// 梦之钉对话框
+        static const std::string DREAM_DIALOGUE_UP = "dialogue/dreamUp/dreamUp_%d.png";
+        static const std::string DREAM_DIALOGUE_DOWN = "dialogue/dreamDown/dreamDown_%d.png";
+    }
+
+    // 音频路径配置 
+    namespace Audio {
+        // 背景音乐
+        static const char* BGM_DIRTMOUTH = "audio/Royal_HollowKnight_Theme.mp3"; 
+        static const char* BGM_BOSS = "audio/BossBattle.mp3";
+        // 主角动作
+        static const char* HERO_JUMP = "audio/hero_jump.mp3";
+        static const char* HERO_LAND_SOFT = "audio/hero_land_soft.mp3";
+        static const char* HERO_LAND_HARD = "audio/hero_land_hard.mp3";
+        static const char* HERO_RUN = "audio/hero_run_footsteps_stone.mp3";
+        static const char* HERO_CAST = "audio/hero_fireball.mp3";
+        // 战斗
+        static const char* HERO_DAMAGE = "audio/hero_damage.mp3";
+        static const char* HERO_DEATH = "audio/hero_death_v2.mp3";
+        static const char* HERO_UNSHEATH = "audio/hero_unsheath.mp3";
+
+        // 攻击 (随机池)
+        static const char* SWORD_1 = "audio/sword_1.mp3";
+        static const char* SWORD_2 = "audio/sword_2.mp3";
+        static const char* SWORD_3 = "audio/sword_3.mp3";
+
+        // 技能 (凝聚)
+        static const char* FOCUS_CHARGE = "audio/focus_health_charging.mp3";
+        static const char* FOCUS_HEAL = "audio/focus_health_heal.mp3";
     }
 
     namespace Render {

@@ -138,7 +138,6 @@ bool HelloWorld::init()
         // 死亡回调
         zombie->setOnDeathCallback([=]() {
             if (_player) {
-                // 兼容不同写法，这里假设 Player 有 gainSoulOnKill
                 _player->gainSoulOnKill();
                 CCLOG("Soul gained from Zombie!");
             }
@@ -1053,14 +1052,14 @@ void HelloWorld::loadMap(const std::string& mapPath)
     }
 
     // 6. 绘制调试碰撞框 (现在会绘制修正后的位置)
-    auto drawNode = DrawNode::create();
-    drawNode->setTag(1000);
-    _gameLayer->addChild(drawNode, 999);
+    // auto drawNode = DrawNode::create();
+    // drawNode->setTag(1000);
+    // _gameLayer->addChild(drawNode, 999);
 
-    for (const auto& rect : _groundRects)
-    {
-        drawNode->drawRect(rect.origin, rect.origin + rect.size, Color4F::RED);
-    }
+    // for (const auto& rect : _groundRects)
+    // {
+    //     drawNode->drawRect(rect.origin, rect.origin + rect.size, Color4F::RED);
+    // }
 
     CCLOG("========== Map Loaded: %s ==========", mapPath.c_str());
 

@@ -114,7 +114,6 @@ void HUDLayer::spawnNextHealth(int index, int maxHp)
     if (!heart) return;
 
     // 2. 设置位置 (和 updateHealth 逻辑保持一致)
-    // 注意：这里的 Y 坐标可能需要根据你的实际情况微调
     heart->setPosition(Vec2(index * 50.0f + 80, -10));
     heart->setTag(1); // 标记为满血
     _healthBarContainer->addChild(heart, 10);

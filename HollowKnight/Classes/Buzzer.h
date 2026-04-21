@@ -1,10 +1,10 @@
 #ifndef __BUZZER_H__
 #define __BUZZER_H__
-
+#include "GameEntity.h"
 #include "cocos2d.h"
 #include <functional>
 
-class Buzzer : public cocos2d::Sprite
+class Buzzer : public GameEntity
 {
 public:
     // 状态枚举
@@ -17,19 +17,19 @@ public:
 
     // 创建方法
     static Buzzer* create(const std::string& filename);
-    virtual bool init();
+    virtual bool init() override;
 
     // 更新方法（AI逻辑）
     void update(float dt, const cocos2d::Vec2& playerPos);
 
     // 受伤方法
-    void takeDamage(int damage, const cocos2d::Vec2& attackerPos);
+    void takeDamage(int damage, const cocos2d::Vec2& attackerPos) override;
 
-    // 【新增】与玩家碰撞时的回调
+    // 与玩家碰撞时的回调
     void onCollideWithPlayer(const cocos2d::Vec2& playerPos);
 
     // 获取碰撞箱
-    cocos2d::Rect getHitbox() const;
+    cocos2d::Rect getHitbox() const override;
 
     // 设置初始位置
     void setInitialPosition(const cocos2d::Vec2& pos);
@@ -38,7 +38,7 @@ public:
     ~Buzzer();
 
     // ==========================================
-    // 【新增】回魂机制接口
+    // 回魂机制接口
     // ==========================================
     typedef std::function<void()> DeathCallback;
     void setOnDeathCallback(DeathCallback callback) { _onDeathCallback = callback; }

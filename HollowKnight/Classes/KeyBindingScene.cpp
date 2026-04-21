@@ -33,8 +33,12 @@ void KeyBindingManager::initDefaultKeys()
     _keyBindings[Action::MOVE_RIGHT] = EventKeyboard::KeyCode::KEY_RIGHT_ARROW;
     _keyBindings[Action::JUMP] = EventKeyboard::KeyCode::KEY_Z;
     _keyBindings[Action::ATTACK] = EventKeyboard::KeyCode::KEY_X;
-    _keyBindings[Action::FOCUS] = EventKeyboard::KeyCode::KEY_C;
+    _keyBindings[Action::FOCUS] = EventKeyboard::KeyCode::KEY_A;
     _keyBindings[Action::DASH] = EventKeyboard::KeyCode::KEY_D;
+    _keyBindings[Action::CAST_SPELL] = EventKeyboard::KeyCode::KEY_S;
+    _keyBindings[Action::DREAM_NAIL] = EventKeyboard::KeyCode::KEY_E;
+    _keyBindings[Action::PAUSE] = EventKeyboard::KeyCode::KEY_SPACE;
+    _keyBindings[Action::CONFIRM] = EventKeyboard::KeyCode::KEY_C;
 }
 
 EventKeyboard::KeyCode KeyBindingManager::getKeyForAction(Action action) const
@@ -124,8 +128,12 @@ std::string KeyBindingManager::getActionName(Action action)
     case Action::MOVE_RIGHT: return "MOVE RIGHT";
     case Action::JUMP: return "JUMP";
     case Action::ATTACK: return "ATTACK";
-    case Action::FOCUS: return "FOCUS/CAST";
+    case Action::FOCUS: return "FOCUS";
     case Action::DASH: return "DASH";
+    case Action::CAST_SPELL: return "CAST SPELL";
+    case Action::DREAM_NAIL: return "DREAM NAIL";
+    case Action::PAUSE: return "PAUSE GAME";
+    case Action::CONFIRM: return "START / CONTINUE";
     default: return "Unknown";
     }
 }
@@ -229,7 +237,8 @@ bool KeyBindingScene::init()
     
     _currentSelection = 0;
     _isWaitingForKey = false;
-    
+    _isPauseMode = false;// 默认为开始界面模式
+
     // 定义动作顺序（左右列）
     _actionOrder = {
         KeyBindingManager::Action::MOVE_UP,
@@ -239,7 +248,11 @@ bool KeyBindingScene::init()
         KeyBindingManager::Action::JUMP,
         KeyBindingManager::Action::ATTACK,
         KeyBindingManager::Action::FOCUS,
-        KeyBindingManager::Action::DASH
+        KeyBindingManager::Action::DASH,
+        KeyBindingManager::Action::CAST_SPELL,
+        KeyBindingManager::Action::DREAM_NAIL,
+        KeyBindingManager::Action::PAUSE,
+        KeyBindingManager::Action::CONFIRM
     };
     
     createUI();
@@ -379,25 +392,28 @@ void KeyBindingScene::createButtons()
 void KeyBindingScene::createInstructions()
 {
     auto visibleSize = Director::getInstance()->getVisibleSize();
-    
-    // 操作提示文字 - 分多行显示更清晰
-    auto hint1 = Label::createWithSystemFont(
+
+    _hintLabel1 = Label::createWithSystemFont(
         "UP/DOWN: Select    ENTER: Change Key    R: Reset",
-        "Arial",
-        24
+        "Arial", 48
     );
-    hint1->setColor(Color3B(160, 160, 180));
-    hint1->setPosition(Vec2(visibleSize.width / 2, 70));
-    this->addChild(hint1, 10);
-    
-    auto hint2 = Label::createWithSystemFont(
-        "ESC: Apply and Start Game",
-        "Arial",
-        24
+    _hintLabel1->setColor(Color3B(160, 160, 180));
+    _hintLabel1->setPosition(Vec2(visibleSize.width / 2, 280));
+    this->addChild(_hintLabel1, 10);
+
+    // 获取当前确认键的名字
+    auto kbm = KeyBindingManager::getInstance();
+    std::string confirmKeyName = kbm->getKeyName(kbm->getKeyForAction(KeyBindingManager::Action::CONFIRM));
+    // 动态生成提示文本
+    std::string hintText = confirmKeyName + ": Start Game   ESC: Exit";
+
+    _hintLabel2 = Label::createWithSystemFont(
+        hintText,
+        "Arial", 48
     );
-    hint2->setColor(Color3B(160, 180, 160));
-    hint2->setPosition(Vec2(visibleSize.width / 2, 35));
-    this->addChild(hint2, 10);
+    _hintLabel2->setColor(Color3B(160, 180, 160));
+    _hintLabel2->setPosition(Vec2(visibleSize.width / 2, 230));
+    this->addChild(_hintLabel2, 10);
 }
 
 void KeyBindingScene::updateKeyLabels()
@@ -436,6 +452,18 @@ void KeyBindingScene::updateKeyLabels()
         }
     }
     CCLOG("=========================");
+
+    if (_hintLabel2)
+    {
+        std::string keyName = kbm->getKeyName(kbm->getKeyForAction(KeyBindingManager::Action::CONFIRM));
+
+        if (_isPauseMode) {
+            _hintLabel2->setString(keyName + ": Continue    ESC: Exit Game");
+        }
+        else {
+            _hintLabel2->setString(keyName + ": Start Game");
+        }
+    }
 }
 
 void KeyBindingScene::updateSelector()
@@ -482,11 +510,7 @@ void KeyBindingScene::setupKeyboardListener()
 }
 
 void KeyBindingScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
-{
-    CCLOG("========== KEY PRESSED ==========");
-    CCLOG("Key Code: %d", (int)keyCode);
-    CCLOG("Is Waiting For Key: %s", _isWaitingForKey ? "YES" : "NO");
-    
+{   
     // 如果正在等待按键输入
     if (_isWaitingForKey)
     {
@@ -524,10 +548,7 @@ void KeyBindingScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
         _keyLabels[_currentSelection]->stopAllActions();
         _keyLabels[_currentSelection]->setColor(Color3B(240, 240, 255));
         _keyLabels[_currentSelection]->setScale(1.0f);
-        
-        // 播放确认音效（如果有的话）
-        // SimpleAudioEngine::getInstance()->playEffect("audio/key_confirm.wav");
-        
+                
         CCLOG("  Exited key listening mode");
         CCLOG("Key binding updated: %s -> %s",
               kbm->getActionName(_selectedAction).c_str(),
@@ -537,7 +558,40 @@ void KeyBindingScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
     }
     
     CCLOG(">>> IN NAVIGATION MODE <<<");
-    
+    // 获取当前设置的“确认键”
+    auto kbm = KeyBindingManager::getInstance();
+    auto confirmKey = kbm->getKeyForAction(KeyBindingManager::Action::CONFIRM);
+    auto pauseKey = kbm->getKeyForAction(KeyBindingManager::Action::PAUSE);
+    // ============================================================
+    // 暂停模式逻辑
+    // ============================================================
+    if (_isPauseMode)
+    {
+        // 如果按下了用户设置的“确认键” -> 继续游戏
+        if (keyCode == confirmKey)
+        {
+            CCLOG("Action: Resume Game");
+            resumeGame();
+            return;
+        }
+        else if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE)
+        {
+            CCLOG("Action: Exit Game Application");
+            Director::getInstance()->end();
+            return;
+        }
+    }
+
+    // ============================================================
+    // 【修改】开始界面导航逻辑
+    // ============================================================
+    // 如果不是暂停模式，且按下了“确认键” -> 开始新游戏
+    if (!_isPauseMode && keyCode == confirmKey)
+    {
+        CCLOG("Action: Start New Game");
+        startGame(); // <--- 以前是 ESC 触发，现在改成自定义键触发
+        return;
+    }
     // 正常导航
     switch (keyCode)
     {
@@ -560,8 +614,8 @@ void KeyBindingScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
         break;
         
     case EventKeyboard::KeyCode::KEY_ESCAPE:
-        CCLOG("  Action: Start Game");
-        startGame();
+        Director::getInstance()->end();
+        return;
         break;
         
     case EventKeyboard::KeyCode::KEY_R:
@@ -698,4 +752,35 @@ void KeyBindingScene::resetKeys()
     }
     
     CCLOG("Key bindings reset to default");
+}
+
+void KeyBindingScene::setPauseMode(bool isPause)
+{
+    _isPauseMode = isPause;
+
+    if (_isPauseMode)
+    {
+        // 1. 修改标题
+        if (_titleLabel) {
+            _titleLabel->setString("PAUSED");
+            _titleLabel->setColor(Color3B::YELLOW); // 变成黄色提示暂停
+        }
+
+        // 2. 修改底部提示
+        if (_hintLabel2) {
+            auto kbm = KeyBindingManager::getInstance();
+            std::string keyName = kbm->getKeyName(kbm->getKeyForAction(KeyBindingManager::Action::CONFIRM));
+			_hintLabel2->setString(keyName + ": Continue    ESC: Exit Game");
+        }
+    }
+}
+
+void KeyBindingScene::resumeGame()
+{
+    // 保存配置
+    KeyBindingManager::getInstance()->saveToFile();
+
+    // 弹出当前场景，恢复到下一个场景 (HelloWorld)
+    Director::getInstance()->popScene();
+    CCLOG("Resuming Game...");
 }

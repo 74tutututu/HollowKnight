@@ -3,10 +3,11 @@
 
 #include "cocos2d.h"
 #include <functional> // 用 std::function
+#include "GameEntity.h"
 
 USING_NS_CC;
 
-class Zombie : public cocos2d::Sprite
+class Zombie : public GameEntity
 {
 public:
     // 僵尸状态枚举
@@ -28,17 +29,16 @@ public:
     void update(float dt, const cocos2d::Vec2& playerPos, const std::vector<cocos2d::Rect>& platforms);
 
     // 受击处理
-    void takeDamage(int damage, const cocos2d::Vec2& attackerPos);
+    void takeDamage(int damage, const cocos2d::Vec2& attackerPos) override;
 
     // 设置巡逻范围
     void setPatrolRange(float leftBound, float rightBound);
 
     // 获取碰撞箱
-    cocos2d::Rect getHitbox() const;
+    cocos2d::Rect getHitbox() const override;
 
     // 碰到主角时的击退反应
     void onCollideWithPlayer(const cocos2d::Vec2& playerPos);
-    void onCollideWithPlayer(const cocos2d::Vec2& playerPos, int playerFacing); // 新增重载
 
     // 定义回调类型
     typedef std::function<void()> DeathCallback;

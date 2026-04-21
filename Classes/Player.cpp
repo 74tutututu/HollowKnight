@@ -3,6 +3,7 @@
 #include "config.h"   
 #include "HelloWorldScene.h"
 #include "Fireball.h" 
+#include "HitEffect.h" // 引入受击特效
 
 USING_NS_CC;
 
@@ -65,6 +66,7 @@ bool Player::init()
     // 依赖注入：把 Config 里的数值传给 Stats
     _stats->initStats(Config::DEFAULT_PLAYER_CFG);
 
+    //player.cpp
     // 绑定回调：Stats 数据变了 -> 通知 Player -> Player 通知 UI
     _stats->onHealthChanged = [this](int cur, int max) {
         if (_onHealthChanged) _onHealthChanged(cur, max);
@@ -119,13 +121,12 @@ bool Player::init()
 
 void Player::update(float dt, const std::vector<cocos2d::Rect>& platforms)
 {
-    // A. 攻击冷却倒计时
+    // 攻击键冷却计时
     if (_attackCooldownTimer > 0) {
         _attackCooldownTimer -= dt;
     }
 
-    // B. 跳跃键重置检测
-    // 只有当玩家【松开】跳跃键时，才允许下一次跳跃
+    //  跳跃键松开检测
     if (!_isJumpPressed) {
         _jumpInputReleased = true;
     }
@@ -255,11 +256,15 @@ void Player::takeDamage(int damage, const cocos2d::Vec2& attackerPos, const std:
     _stats->takeDamage(damage);
     CCLOG("Player took damage! Health: %d", _stats->getHealth());
 
-    // 3. 计算正确的击退方向 (远离攻击者)
+    // 3. 受击特效（适配主角大小，居中）
+    float fxSize = std::max(this->getContentSize().width, this->getContentSize().height) * 0.8f;
+    HitEffect::play(this->getParent(), this->getPosition() + Vec2(0, this->getContentSize().height * 0.5f), fxSize);
+
+    // 4. 计算正确的击退方向 (远离攻击者)
     float knockbackSpeed = 400.0f;
     float direction = (this->getPositionX() < attackerPos.x) ? -1.0f : 1.0f;
 
-    // 4. UI 更新
+    // 5. UI 更新
     if (_onHealthChanged) {
         _onHealthChanged(this->getHealth(), this->getMaxHealth());
     }
@@ -267,7 +272,7 @@ void Player::takeDamage(int damage, const cocos2d::Vec2& attackerPos, const std:
     _velocity.x = direction * knockbackSpeed;
     _velocity.y = 300.0f; // 给一个小跳，防止在地面摩擦力过大
 
-    // 5. 切换状态和无敌
+    // 6. 切换状态和无敌
     changeState(new StateDamaged());
 
     _isInvincible = true;
@@ -681,5 +686,13 @@ void Player::setOnSoulChanged(const std::function<void(int)>& callback)
     _onSoulChanged = callback;
     if (_stats) {
         _stats->onSoulChanged = callback;
+    }
+}
+
+// 新增：施法后刷新地面判定和安全坐标
+void Player::recordSafePositionIfOnGround()
+{
+    if (_isOnGround) {
+        _lastSafePosition = this->getPosition();
     }
 }

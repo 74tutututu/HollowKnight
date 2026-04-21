@@ -3,6 +3,7 @@
 
 #include "cocos2d.h"
 #include "FKFireball.h"
+#include "GameEntity.h"
 
 class Boss : public cocos2d::Node
 {
@@ -30,10 +31,10 @@ public:
 
     // 伤害接口
     // damage: 扣除的数值 (平A=1, 法术=2)
-    void takeDamage(int damage);
+     void takeDamage(int damage) ;
 
     // 获取碰撞框
-    cocos2d::Rect getBodyHitbox() const;
+    cocos2d::Rect getBodyHitbox() const ;
     cocos2d::Rect getHammerHitbox() const;
 
     bool isDead() const { return _isDead; }

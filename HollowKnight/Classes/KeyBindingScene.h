@@ -23,7 +23,11 @@ public:
         JUMP,
         ATTACK,
         FOCUS,
-        DASH
+        DASH,
+        CAST_SPELL,
+        DREAM_NAIL,
+        PAUSE,
+        CONFIRM
     };
     
     // 获取某个动作对应的按键
@@ -55,31 +59,42 @@ private:
     void initDefaultKeys();
 };
 
-// 键位配置场景
+// ==========================================
+// 键位配置场景 (兼暂停菜单)
+// ==========================================
 class KeyBindingScene : public Scene
 {
 public:
     static Scene* createScene();
-    
+
     virtual bool init() override;
-    
+
     CREATE_FUNC(KeyBindingScene);
-    
+
+    // 【新增】设置是否为暂停模式
+    void setPauseMode(bool isPause);
+
 private:
     // UI 元素
     Label* _titleLabel;
-    std::vector<Label*> _actionLabels;      // 左侧动作名称
-    std::vector<Label*> _keyLabels;         // 右侧按键显示
-    Sprite* _selector;                       // 选择光标
-    
+
+    std::vector<Label*> _actionLabels;
+    std::vector<Label*> _keyLabels;
+    Sprite* _selector;
+
     // 状态
-    int _currentSelection;                   // 当前选中项 (0-7)
-    bool _isWaitingForKey;                   // 是否正在等待按键输入
-    KeyBindingManager::Action _selectedAction; // 当前选中的动作
-    
-    // 按键映射（用于界面显示）
+    int _currentSelection;
+    bool _isWaitingForKey;
+    KeyBindingManager::Action _selectedAction;
     std::vector<KeyBindingManager::Action> _actionOrder;
-    
+
+    // 暂停模式标记
+    bool _isPauseMode;
+
+    // 【新增】提示标签指针，方便修改文本
+    Label* _hintLabel1;
+    Label* _hintLabel2;
+
     // 方法
     void createUI();
     void createTitle();
@@ -88,18 +103,19 @@ private:
     void createInstructions();
     void updateKeyLabels();
     void updateSelector();
-    
-    // 输入处理
+
+    // 交互逻辑
     void setupKeyboardListener();
     void onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event);
     void onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event);
-    
-    // 选择处理
+
     void moveSelectionUp();
     void moveSelectionDown();
     void confirmSelection();
+
     void startGame();
     void resetKeys();
+    void resumeGame();
 };
 
 #endif // __KEY_BINDING_SCENE_H__
