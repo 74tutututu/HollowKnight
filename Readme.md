@@ -4,11 +4,14 @@
 
 ### 基于 Cocos2d-x 的《空洞骑士》复刻版
 
-![](C:\Users\徐千顺\AppData\Roaming\marktext\images\2026-04-21-19-26-10-image.png)
+<img width="1298" height="652" alt="image" src="https://github.com/user-attachments/assets/5d437374-573a-4384-8bfd-847ec5d66976" />
 
-![](C:\Users\徐千顺\AppData\Roaming\marktext\images\2026-04-21-19-26-55-image.png)
 
-![](C:\Users\徐千顺\AppData\Roaming\marktext\images\2026-04-21-19-27-24-image.png)
+<img width="1294" height="694" alt="image" src="https://github.com/user-attachments/assets/3755d78c-bd04-4538-95da-babfb4f4c72c" />
+
+
+<img width="1298" height="640" alt="image" src="https://github.com/user-attachments/assets/5da0ca3c-ff38-4461-be6e-b9e42cc066d4" />
+
 
 一款使用 **C++ 与 Cocos2d-x** 从零实现的 2D 横版动作冒险游戏，复刻自 Team Cherry 的经典作品《Hollow Knight》。项目涵盖角色状态机、敌人 AI、解谜机制、Boss 战与 Android 跨平台移植。
 
